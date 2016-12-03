@@ -189,7 +189,6 @@ def regular_graph_update(compatability_functions,  num_buckets):
 	num_buckets: The number of buckets used when generating the marginals
 	Given the compatability functions, returns the probability matrix for the regular connected graph
 	"""
-
 	probability = np.ones((num_buckets, num_buckets, num_buckets, num_buckets, num_buckets, num_buckets, num_buckets, num_buckets, num_buckets))
 	for i in range(0, num_buckets):
 		for j in range(0, num_buckets):
