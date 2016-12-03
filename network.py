@@ -85,7 +85,6 @@ def bucketByMedian(M, num_buckets=2):
 	buckets.append(np.zeros(M.shape[1]))
 	for i in range(1,num_buckets):
 		buckets.append(np.percentile(M, 100.0*i/num_buckets, axis=0))
-	print buckets
 	for i in range(0,M.shape[0]):
 		for j in range(0,M.shape[1]):
 			max_bucket = 0
@@ -159,14 +158,12 @@ def IPF(graph, marginals, num_buckets, probability_update_function, num_iteratio
 	probability = probability/np.sum(probability)
 	axis = tuple(range(0,graph.number_of_nodes()))
 	for _ in range(0,num_iterations):
-		print _
 		for edge in graph.edges():
 			sum_axis = tuple(set(axis) - set(edge))
 			sum_of_probability = np.sum(probability, axis=sum_axis)
 			sum_of_probability[sum_of_probability == 0] = 1
 			compatability_functions[edge] = compatability_functions[edge] * marginals[edge]/sum_of_probability
 			probability = probability_update_function(compatability_functions, num_buckets)
-		print np.sum(probability, axis=(2,3,4,5,6,7,8))
 	return compatability_functions, probability
 
 def strong_graph_update(compatability_functions,  num_buckets):
@@ -257,3 +254,7 @@ def get_marginals_regular_graph(graph, data_matrix, num_buckets=2):
 #mean_bucketing = bucketByMedian(tpm_single_cell,num_buckets=2)
 #edge_marginals = get_marginals_regular_graph(regular_network, mean_bucketing, 2)
 #compatability_functions_single_cell, probability_single_cell = IPF(regular_network, edge_marginals, 2, regular_graph_update, 10)
+
+bulkMedian = bucketByMedian(tpm_bulk)
+bulkMM= get_marginals_strong_graph(strong_network,bulkMedian)
+IPF(strong_network,bulkMM,2,strong_graph_update)
