@@ -64,8 +64,8 @@ ALSO: I clean out all rows with dropout in the nodes we're interested in
 """
 tpm_bulk=np.loadtxt('SRSF_bulk.tsv', delimiter=',', usecols=range(1,34))
 tpm_single_cell=np.loadtxt('SRSF_scRNA.tsv', delimiter=',', usecols=range(1,2366))
-tpm_bulk = np.array([tpm_bulk[0], tpm_bulk[4], tpm_bulk[5], tpm_bulk[6], tpm_bulk[8], tpm_bulk[10]])
-tpm_single_cell = np.array([tpm_single_cell[0], tpm_single_cell[1], tpm_single_cell[2], tpm_single_cell[4], tpm_single_cell[5], tpm_single_cell[6], tpm_single_cell[7], tpm_single_cell[8], tpm_single_cell[10]])
+tpm_bulk = np.array([tpm_bulk[0], tpm_bulk[7], tpm_bulk[8], tpm_bulk[9], tpm_bulk[11], tpm_bulk[2]])
+tpm_single_cell = np.array([tpm_single_cell[0], tpm_single_cell[4], tpm_single_cell[5], tpm_single_cell[7], tpm_single_cell[8], tpm_single_cell[9], tpm_single_cell[10], tpm_single_cell[11], tpm_single_cell[2]])
 tpm_bulk = tpm_bulk.T
 tpm_single_cell = tpm_single_cell.T
 tpm_bulk = cleanMatrix(tpm_bulk)
