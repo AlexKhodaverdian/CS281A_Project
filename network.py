@@ -116,6 +116,7 @@ def bucketByRange(M, num_buckets=2):
 					max_bucket = k
 			M[i][j] = max_bucket
 	return M
+
 def bucketByMean(M):
 	"""
 	M: Data Matrix
