@@ -246,6 +246,43 @@ def get_marginals_regular_graph(graph, data_matrix, num_buckets=2):
 		edge_marginals[edge] = np.sum(marginals,axis=axis)
 	return edge_marginals
 
+def SUM_PRODUCT(graph, compatability_functions, num_buckets=2, num_iterations=1000):
+	"""
+	graph: DIRECTED networkx graph
+	compatability_functions: A dictioanry which maps edges (v,w) -> Compatability matrix
+	num_buckets: The number of buckets used for the marginals
+	num_iterations = Number of iterations to run IPF
+
+	Returns the messages and also the single node marginals
+	"""
+	M = {} # Message matrix, M[(u,t)] is the message from u to t
+	for edge in graph.edges():
+		M[edge] = np.array([1.0 for _ in range(0, num_buckets)])
+	for _ in range(0, num_iterations):
+		temp_M = {}
+		for edge in graph.edges():
+			zum = np.array([0.0 for _ in range(0,num_buckets)])
+			for ind in [1.0*i for i in range(0,num_buckets)]:
+				neighbors = graph.neighbors(edge[0])
+				neighbors.remove(edge[1])
+				product = 1
+				for v in neighbors:
+					product = product * M[(v, edge[0])][ind]
+				zum = zum +  (compatability_functions[(edge[1],edge[0])][:,ind]) * product
+			temp_M[edge] = M[edge] + zum
+			temp_M[edge] = temp_M[edge]/sum(temp_M[edge])
+		M = temp_M
+	# Marginals
+	single_node_marginals = {} 
+	for node in graph.nodes():
+		prod = np.array([1.0 for _ in range(0,num_buckets)])
+		for edge in graph.edges():
+			if edge[1] == node:
+					prod = prod * M[edge]
+		single_node_marginals[node] = prod/sum(prod)
+			
+	return M, single_node_marginals
+
 
 #mean_bucketing = bucketByMedian(tpm_bulk, num_buckets=3)
 #edge_marginals_2 = get_marginals_strong_graph(strong_network, mean_bucketing, num_buckets=3)
@@ -255,6 +292,11 @@ def get_marginals_regular_graph(graph, data_matrix, num_buckets=2):
 #edge_marginals = get_marginals_regular_graph(regular_network, mean_bucketing, 2)
 #compatability_functions_single_cell, probability_single_cell = IPF(regular_network, edge_marginals, 2, regular_graph_update, 10)
 
-bulkMedian = bucketByMedian(tpm_bulk)
-bulkMM= get_marginals_strong_graph(strong_network,bulkMedian)
-IPF(strong_network,bulkMM,2,strong_graph_update)
+bulkMedian = bucketByMedian(tpm_bulk, num_buckets=3)
+bulkMM= get_marginals_strong_graph(strong_network,bulkMedian, num_buckets=3)
+directed_compatability_functions = {}
+compatability_functions, probability = IPF(strong_network,bulkMM,3,strong_graph_update)
+for edge in compatability_functions:
+	directed_compatability_functions[edge] = compatability_functions[edge]
+	directed_compatability_functions[(edge[1], edge[0])] = compatability_functions[edge][::-1, ::-1]
+messages, single_node_marginals = SUM_PRODUCT(strong_network.to_directed(), directed_compatability_functions, num_buckets=3)
