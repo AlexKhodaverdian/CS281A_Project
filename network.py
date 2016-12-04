@@ -292,7 +292,7 @@ def SUM_PRODUCT(graph, compatability_functions, num_buckets=2, num_iterations=10
 #edge_marginals = get_marginals_regular_graph(regular_network, mean_bucketing, 2)
 #compatability_functions_single_cell, probability_single_cell = IPF(regular_network, edge_marginals, 2, regular_graph_update, 10)
 
-bulkMedian = bucketByMedian(tpm_bulk, num_buckets=3)
+bulkMedian = bucketByRange(tpm_bulk, num_buckets=3)
 bulkMM= get_marginals_strong_graph(strong_network,bulkMedian, num_buckets=3)
 directed_compatability_functions = {}
 compatability_functions, probability = IPF(strong_network,bulkMM,3,strong_graph_update)
