@@ -280,7 +280,6 @@ def SUM_PRODUCT(graph, compatability_functions, num_buckets=2, num_iterations=10
 			if edge[1] == node:
 					prod = prod * M[edge]
 		single_node_marginals[node] = prod/sum(prod)
-			
 	return M, single_node_marginals
 
 
@@ -299,4 +298,69 @@ compatability_functions, probability = IPF(strong_network,bulkMM,3,strong_graph_
 for edge in compatability_functions:
 	directed_compatability_functions[edge] = compatability_functions[edge]
 	directed_compatability_functions[(edge[1], edge[0])] = compatability_functions[edge][::-1, ::-1]
+
+
 messages, single_node_marginals = SUM_PRODUCT(strong_network.to_directed(), directed_compatability_functions, num_buckets=3)
+
+
+def impute_bucketByMedian(M, Ref, cumulative, num_buckets=2):
+	"""
+	M: Data Matrix
+	num_buckets: Number of buckets to partition M into
+	Buckets each sample by its quartile value. 
+	Ie if we had 1 dimensional data matrix [0,1,2,3,4,10] -> [0,0,1,1,2,2] for 3 buckets
+	"""
+	Ref = Ref.copy()
+	buckets = []
+	buckets.append(np.zeros(Ref.shape[1]))
+	for i in range(1,num_buckets):
+		buckets.append(np.percentile(Ref, 100.0*i/num_buckets, axis=0))
+	for i in range(0,M.shape[0]):
+		for j in range(0,M.shape[1]):
+                    if M[i][j] == 0:
+                        guess = assign(j, cumulative,num_buckets)
+                        M[i][j] == guess
+                    else:
+			max_bucket = 0
+			for k in range(0,num_buckets):
+				if M[i][j] >= buckets[k][j]:
+					max_bucket = k
+			M[i][j] = max_bucket
+	return M
+
+
+def impute_probability(graph,messages,buckets=2):
+    probabilities = {}
+    cumulative = {}
+    for node in graph.nodes():
+        suma = 0
+        prob_list = []
+        for k in range(buckets):
+            product = 1
+            for edge in graph.edges(node):
+                product = product*messages[edge][k]
+            suma += product
+            prob_list.append(product)
+        probabilities.update({node:np.array(prob_list)/float(suma)})
+        cumulative_sum = 0
+        cumulative_list = []
+        for k in range(buckets):
+            cumulative_sum += probabilities[node][k]
+            cumulative_list.append(cumulative_sum)
+        cumulative_list[-1]=1
+        cumulative.update({node:cumulative_list})
+    return probabilities, cumulative
+
+
+def assign(node, cumulative,buckets=2):
+    coin = r.random()
+    for k in range(buckets):
+        if coin < cumulative[node][k]:
+            return k
+
+
+strong_sc=np.loadtxt('SRSF_scRNA.tsv', delimiter=',', usecols=range(1,2366))
+strong_sc = np.array([strong_sc[0], strong_sc[7], strong_sc[8], strong_sc[9], strong_sc[11], strong_sc[2]])
+strong_sc = strong_sc.T
+ref_sc = cleanMatrix(strong_sc)
+tpm_single_cell = impute_bucketByMedian(strong_sc, ref_sc, cumu, num_buckets=3)
